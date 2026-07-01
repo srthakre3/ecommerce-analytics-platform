@@ -1,0 +1,48 @@
+name: CI — Lint & Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check Python syntax
+        run: |
+          python -m py_compile ingestion/load_orders.py
+          python -m py_compile ingestion/load_customers.py
+          echo "✅ Python syntax OK"
+
+      - name: Validate YAML files
+        run: |
+          pip install pyyaml -q
+          python -c "
+          import yaml, glob, sys
+          for f in glob.glob('**/*.yml', recursive=True):
+              try:
+                  yaml.safe_load(open(f))
+                  print(f'OK: {f}')
+              except Exception as e:
+                  print(f'FAIL: {f} — {e}')
+                  sys.exit(1)
+          "
+
+      - name: Validate SQL models exist
+        run: |
+          find dbt_project/models -name "*.sql" | sort
+          COUNT=$(find dbt_project/models -name "*.sql" | wc -l)
+          echo "Found $COUNT SQL models"
+          if [ "$COUNT" -lt 5 ]; then
+            echo "ERROR: Expected at least 5 SQL models"
+            exit 1
+          fi
