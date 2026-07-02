@@ -1,6 +1,6 @@
 # E-Commerce Analytics Platform
 
-End-to-end analytics platform for an e-commerce dataset — ingestion from raw CSV/API sources into Redshift, dbt transformations (staging → intermediate → marts), and a QuickSight-style KPI dashboard layer. Demonstrates a full BI stack from raw data to executive reporting.
+End-to-end analytics platform for an e-commerce dataset. Ingests from raw CSV/API sources into Redshift, runs dbt transformations (staging → intermediate → marts), and produces a QuickSight-style KPI dashboard layer. Covers the full BI stack from raw data to executive reporting.
 
 ## Architecture
 
