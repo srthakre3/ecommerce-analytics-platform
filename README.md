@@ -4,6 +4,10 @@ End-to-end analytics platform for an e-commerce dataset. Ingests from raw CSV/AP
 
 ## Architecture
 
+![Architecture Diagram](docs/architecture.svg)
+
+Raw e-commerce data flows through Redshift into dbt's three-layer transformation model (staging → intermediate → mart), feeds a governed metric layer (revenue, churn, cohort retention), and surfaces in interactive QuickSight/Tableau dashboards. Star schema centers on `fact_orders` with dimension tables for customers, products, dates, and channels.
+
 ```
 Raw Sources (CSV / S3)
          │
