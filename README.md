@@ -1,6 +1,6 @@
 # E-Commerce Analytics Platform
 
-End-to-end analytics platform for an e-commerce dataset. Ingests from raw CSV/API sources into Redshift, runs dbt transformations (staging → intermediate → marts), and produces a QuickSight-style KPI dashboard layer. Covers the full BI stack from raw data to executive reporting.
+End-to-end analytics platform for an e-commerce dataset. Ingests from raw CSV sources into Redshift, runs dbt transformations (staging → intermediate → marts), and produces a governed KPI metric layer powering interactive dashboards. Covers the full BI stack from raw data to executive reporting.
 
 ## Architecture
 
@@ -8,33 +8,14 @@ End-to-end analytics platform for an e-commerce dataset. Ingests from raw CSV/AP
 
 Raw e-commerce data flows through Redshift into dbt's three-layer transformation model (staging → intermediate → mart), feeds a governed metric layer (revenue, churn, cohort retention), and surfaces in interactive QuickSight/Tableau dashboards. Star schema centers on `fact_orders` with dimension tables for customers, products, dates, and channels.
 
-```
-Raw Sources (CSV / S3)
-         │
-         ▼
-  Ingestion Layer (Python + boto3)
-  → Redshift raw schema
-         │
-         ▼
-  dbt Transformation
-  ├── staging/       → clean & cast raw tables
-  ├── intermediate/  → session stitching, revenue attribution
-  └── marts/         → fct_orders, fct_sessions, dim_customers, dim_products
-         │
-         ▼
-  Analytics Layer
-  └── dashboards/    → KPI definitions, sample QuickSight SPICE config
-```
-
 ## Tech Stack
 
 | Layer | Tool |
 |-------|------|
 | Storage | Amazon Redshift / PostgreSQL (local) |
-| Orchestration | Apache Airflow |
 | Transformation | dbt + dbt_utils |
-| Ingestion | Python, boto3, pandas |
-| BI Layer | Amazon QuickSight (config) |
+| Ingestion | Python, pandas |
+| BI Layer | Amazon QuickSight / Tableau |
 | CI | GitHub Actions |
 
 ## Project Structure
@@ -62,6 +43,8 @@ ecommerce-analytics-platform/
 │           └── dim_products.sql
 ├── dashboards/
 │   └── kpi_definitions.md      # KPI definitions for QuickSight
+├── docs/
+│   └── architecture.svg        # Architecture diagram
 ├── .github/workflows/
 │   └── ci.yml
 └── requirements.txt
@@ -78,18 +61,42 @@ ecommerce-analytics-platform/
 | Top Products | fct_orders + dim_products | Revenue by SKU |
 | Refund Rate | fct_orders | % orders refunded |
 
-## Usage
+## Setup
+
+### Prerequisites
+
+Python 3.11+, dbt-core, and access to a PostgreSQL or Redshift instance.
+
+### Run locally
 
 ```bash
-# 1. Load raw data
-python ingestion/load_orders.py --source data/orders.csv --connection $REDSHIFT_CONN
+# 1. Clone and install dependencies
+git clone https://github.com/srthakre3/ecommerce-analytics-platform.git
+cd ecommerce-analytics-platform
+pip install -r requirements.txt
 
-# 2. Run dbt transformations
+# 2. Load raw data
+python ingestion/load_orders.py --source data/orders.csv --connection $DB_CONN
+python ingestion/load_customers.py --source data/customers.csv --connection $DB_CONN
+
+# 3. Run dbt transformations
 cd dbt_project
 dbt deps
 dbt run
 dbt test
 
-# 3. Verify marts
+# 4. Verify marts
 dbt run --select marts
 ```
+
+## Results
+
+- Full dimensional model with 4 mart tables (fct_orders, dim_customers, dim_products, dim_dates)
+- Governed metric layer covering revenue, churn, and cohort retention
+- dbt tests enforcing referential integrity and null constraints across all models
+- Dashboard-ready KPI definitions documented in `dashboards/kpi_definitions.md`
+
+## Author
+
+**Sanket Thakre**, Business Intelligence Engineer @ Amazon
+[srthakre3.github.io](https://srthakre3.github.io) · [github.com/srthakre3](https://github.com/srthakre3)
